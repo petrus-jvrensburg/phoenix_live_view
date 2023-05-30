@@ -340,6 +340,8 @@ export default class LiveSocket {
       afterMs = this.failsafeJitter
     }
     this.reloadWithJitterTimer = setTimeout(() => {
+      // try connecting again
+      this.connect()
       // if view has recovered, such as transport replaced, then cancel
       console.log(`view.isDestroyed(): ${view.isDestroyed()}`)
       console.log(`view.isConnected(): ${view.isConnected()}`)

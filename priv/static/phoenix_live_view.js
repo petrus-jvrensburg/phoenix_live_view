@@ -3878,6 +3878,7 @@ within:
         afterMs = this.failsafeJitter;
       }
       this.reloadWithJitterTimer = setTimeout(() => {
+        this.connect();
         console.log(`view.isDestroyed(): ${view.isDestroyed()}`);
         console.log(`view.isConnected(): ${view.isConnected()}`);
         if (view.isDestroyed() || view.isConnected()) {
