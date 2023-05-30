@@ -3675,6 +3675,7 @@ var LiveSocket = class {
     });
     this.socket.onOpen(() => {
       if (this.isUnloaded()) {
+        console.log("check 7: hard reload");
         window.location.reload();
       }
     });
@@ -3737,6 +3738,7 @@ var LiveSocket = class {
     }
   }
   disconnect(callback) {
+    console.log("check 1: disconnect()");
     clearTimeout(this.reloadWithJitterTimer);
     this.socket.disconnect(callback);
   }
@@ -3754,7 +3756,9 @@ var LiveSocket = class {
     });
   }
   unload() {
+    console.log("check 2: unload()");
     if (this.unloaded) {
+      console.log("check 3: unloaded");
       return;
     }
     if (this.main && this.isConnected()) {
@@ -3833,6 +3837,7 @@ var LiveSocket = class {
     return fakePush;
   }
   reloadWithJitter(view, log) {
+    console.log(`check 4: reloadWithJitter(), tries: ${tries}`);
     clearTimeout(this.reloadWithJitterTimer);
     this.disconnect();
     let minMs = this.reloadJitterMin;
@@ -3843,6 +3848,8 @@ var LiveSocket = class {
       afterMs = this.failsafeJitter;
     }
     this.reloadWithJitterTimer = setTimeout(() => {
+      console.log(`view.isDestroyed(): ${view.isDestroyed()}`);
+      console.log(`view.isConnected(): ${view.isConnected()}`);
       if (view.isDestroyed() || view.isConnected()) {
         return;
       }
@@ -3854,6 +3861,7 @@ var LiveSocket = class {
       if (this.hasPendingLink()) {
         window.location = this.pendingLink;
       } else {
+        console.log("check 5: hard reload");
         window.location.reload();
       }
     }, afterMs);
@@ -4019,7 +4027,9 @@ var LiveSocket = class {
     }
     this.boundTopLevelEvents = true;
     this.socket.onClose((event) => {
+      console.log(`onClose() event: ${event}`);
       if (event && event.code === 1e3 && this.main) {
+        console.log("entering failsafe");
         return this.reloadWithJitter(this.main);
       }
     });
@@ -4029,6 +4039,7 @@ var LiveSocket = class {
       if (e.persisted) {
         this.getSocket().disconnect();
         this.withPageLoading({ to: window.location.href, kind: "redirect" });
+        console.log("check 6: hard reload");
         window.location.reload();
       }
     }, true);

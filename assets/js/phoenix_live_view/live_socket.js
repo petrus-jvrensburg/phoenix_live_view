@@ -166,6 +166,7 @@ export default class LiveSocket {
     this.socket.onOpen(() => {
       if(this.isUnloaded()){
         // reload page if being restored from back/forward cache and browser does not emit "pageshow"
+        console.log("check 7: hard reload")
         window.location.reload()
       }
     })
@@ -224,6 +225,7 @@ export default class LiveSocket {
   }
 
   disconnect(callback){
+    console.log("check 1: disconnect()")
     clearTimeout(this.reloadWithJitterTimer)
     this.socket.disconnect(callback)
   }
@@ -247,7 +249,11 @@ export default class LiveSocket {
   }
 
   unload(){
-    if(this.unloaded){ return }
+    console.log("check 2: unload()")
+    if(this.unloaded){ 
+      console.log("check 3: unloaded")
+      return 
+    }
     if(this.main && this.isConnected()){ this.log(this.main, "socket", () => ["disconnect for page nav"]) }
     this.unloaded = true
     this.destroyAllViews()
@@ -322,6 +328,7 @@ export default class LiveSocket {
   }
 
   reloadWithJitter(view, log){
+    console.log(`check 4: reloadWithJitter(), tries: ${tries}`)
     clearTimeout(this.reloadWithJitterTimer)
     this.disconnect()
     let minMs = this.reloadJitterMin
@@ -333,6 +340,8 @@ export default class LiveSocket {
     }
     this.reloadWithJitterTimer = setTimeout(() => {
       // if view has recovered, such as transport replaced, then cancel
+      console.log(`view.isDestroyed(): ${view.isDestroyed()}`)
+      console.log(`view.isConnected(): ${view.isConnected()}`)
       if(view.isDestroyed() || view.isConnected()){ return }
       view.destroy()
       log ? log() : this.log(view, "join", () => [`encountered ${tries} consecutive reloads`])
@@ -342,6 +351,7 @@ export default class LiveSocket {
       if(this.hasPendingLink()){
         window.location = this.pendingLink
       } else {
+        console.log("check 5: hard reload")
         window.location.reload()
       }
     }, afterMs)
@@ -508,14 +518,19 @@ export default class LiveSocket {
     this.boundTopLevelEvents = true
     // enter failsafe reload if server has gone away intentionally, such as "disconnect" broadcast
     this.socket.onClose(event => {
+      console.log(`onClose() event: ${event}`)
       // failsafe reload if normal closure and we still have a main LV
-      if(event && event.code === 1000 && this.main){ return this.reloadWithJitter(this.main) }
+      if(event && event.code === 1000 && this.main){ 
+        console.log("entering failsafe")
+        return this.reloadWithJitter(this.main) 
+      }
     })
     document.body.addEventListener("click", function (){ }) // ensure all click events bubble for mobile Safari
     window.addEventListener("pageshow", e => {
       if(e.persisted){ // reload page if being restored from back/forward cache
         this.getSocket().disconnect()
         this.withPageLoading({to: window.location.href, kind: "redirect"})
+        console.log("check 6: hard reload")
         window.location.reload()
       }
     }, true)
