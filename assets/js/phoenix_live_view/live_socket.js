@@ -343,7 +343,15 @@ export default class LiveSocket {
       // if view has recovered, such as transport replaced, then cancel
       console.log(`view.isDestroyed(): ${view.isDestroyed()}`)
       console.log(`view.isConnected(): ${view.isConnected()}`)
-      if(view.isDestroyed() || view.isConnected()){ return }
+      if(view.isDestroyed() || view.isConnected()){ 
+        console.log("returning")
+        return 
+      }
+      if(tries < this.maxReloads){
+        console.log("try again")
+        this.reloadWithJitter(view, log)
+        return
+      }
       view.destroy()
       log ? log() : this.log(view, "join", () => [`encountered ${tries} consecutive reloads`])
       if(tries > this.maxReloads){

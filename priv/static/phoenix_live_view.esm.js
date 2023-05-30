@@ -3839,6 +3839,12 @@ var LiveSocket = class {
       console.log(`view.isDestroyed(): ${view.isDestroyed()}`);
       console.log(`view.isConnected(): ${view.isConnected()}`);
       if (view.isDestroyed() || view.isConnected()) {
+        console.log("returning");
+        return;
+      }
+      if (tries < this.maxReloads) {
+        console.log("try again");
+        this.reloadWithJitter(view, log);
         return;
       }
       view.destroy();
