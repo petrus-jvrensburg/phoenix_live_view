@@ -3647,6 +3647,7 @@ var LiveSocket = class {
     this.hooks = opts.hooks || {};
     this.uploaders = opts.uploaders || {};
     this.loaderTimeout = opts.loaderTimeout || LOADER_TIMEOUT;
+    this.reconnectTimer = null;
     this.reloadWithJitterTimer = null;
     this.maxReloads = opts.maxReloads || MAX_RELOADS;
     this.reloadJitterMin = opts.reloadJitterMin || RELOAD_JITTER_MIN;
@@ -3727,10 +3728,12 @@ var LiveSocket = class {
   disconnect(callback) {
     console.log("check 1: disconnect()");
     clearTimeout(this.reloadWithJitterTimer);
+    clearTimeout(this.reconnectTimer);
     this.socket.disconnect(callback);
   }
   replaceTransport(transport) {
     clearTimeout(this.reloadWithJitterTimer);
+    clearTimeout(this.reconnectTimer);
     this.socket.replaceTransport(transport);
     this.connect();
   }
@@ -3826,6 +3829,7 @@ var LiveSocket = class {
   reloadWithJitter(view, log) {
     console.log(`check 4: reloadWithJitter()`);
     clearTimeout(this.reloadWithJitterTimer);
+    clearTimeout(this.reconnectTimer);
     this.disconnect();
     let minMs = this.reloadJitterMin;
     let maxMs = this.reloadJitterMax;
@@ -3835,33 +3839,34 @@ var LiveSocket = class {
     if (tries > this.maxReloads) {
       afterMs = this.failsafeJitter;
     }
-    this.reloadWithJitterTimer = setTimeout(() => {
+    this.reconnectTimer = setTimeout(() => {
+      console.log("trying to reconnect");
       this.connect();
-      setTimeout(() => {
-        console.log(`view.isDestroyed(): ${view.isDestroyed()}`);
-        console.log(`view.isConnected(): ${view.isConnected()}`);
-        if (view.isDestroyed() || view.isConnected()) {
-          console.log("returning");
-          return;
-        }
-        if (tries < this.maxReloads) {
-          console.log("try again");
-          this.reloadWithJitter(view, log);
-          return;
-        }
-        view.destroy();
-        log ? log() : this.log(view, "join", () => [`encountered ${tries} consecutive reloads`]);
-        if (tries > this.maxReloads) {
-          this.log(view, "join", () => [`exceeded ${this.maxReloads} consecutive reloads. Entering failsafe mode`]);
-        }
-        if (this.hasPendingLink()) {
-          window.location = this.pendingLink;
-        } else {
-          console.log("check 5: hard reload");
-          window.location.reload();
-        }
-      }, 2e3);
-    }, afterMs - 2e3);
+    }, Math.floor(afterMs / 2));
+    this.reloadWithJitterTimer = setTimeout(() => {
+      console.log(`view.isDestroyed(): ${view.isDestroyed()}`);
+      console.log(`view.isConnected(): ${view.isConnected()}`);
+      if (view.isDestroyed() || view.isConnected()) {
+        console.log("returning");
+        return;
+      }
+      if (tries < this.maxReloads) {
+        console.log("try again");
+        this.reloadWithJitter(view, log);
+        return;
+      }
+      view.destroy();
+      log ? log() : this.log(view, "join", () => [`encountered ${tries} consecutive reloads`]);
+      if (tries > this.maxReloads) {
+        this.log(view, "join", () => [`exceeded ${this.maxReloads} consecutive reloads. Entering failsafe mode`]);
+      }
+      if (this.hasPendingLink()) {
+        window.location = this.pendingLink;
+      } else {
+        console.log("check 5: hard reload");
+        window.location.reload();
+      }
+    }, afterMs);
   }
   getHookCallbacks(name) {
     return name && name.startsWith("Phoenix.") ? hooks_default[name.split(".")[1]] : this.hooks[name];
