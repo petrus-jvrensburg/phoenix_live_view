@@ -342,30 +342,33 @@ export default class LiveSocket {
     this.reloadWithJitterTimer = setTimeout(() => {
       // try connecting again
       this.connect()
-      // if view has recovered, such as transport replaced, then cancel
-      console.log(`view.isDestroyed(): ${view.isDestroyed()}`)
-      console.log(`view.isConnected(): ${view.isConnected()}`)
-      if(view.isDestroyed() || view.isConnected()){ 
-        console.log("returning")
-        return 
-      }
-      if(tries < this.maxReloads){
-        console.log("try again")
-        this.reloadWithJitter(view, log)
-        return
-      }
-      view.destroy()
-      log ? log() : this.log(view, "join", () => [`encountered ${tries} consecutive reloads`])
-      if(tries > this.maxReloads){
-        this.log(view, "join", () => [`exceeded ${this.maxReloads} consecutive reloads. Entering failsafe mode`])
-      }
-      if(this.hasPendingLink()){
-        window.location = this.pendingLink
-      } else {
-        console.log("check 5: hard reload")
-        window.location.reload()
-      }
-    }, afterMs)
+      
+      setTimeout(() => {
+        // if view has recovered, such as transport replaced, then cancel
+        console.log(`view.isDestroyed(): ${view.isDestroyed()}`)
+        console.log(`view.isConnected(): ${view.isConnected()}`)
+        if(view.isDestroyed() || view.isConnected()){ 
+          console.log("returning")
+          return 
+        }
+        if(tries < this.maxReloads){
+          console.log("try again")
+          this.reloadWithJitter(view, log)
+          return
+        }
+        view.destroy()
+        log ? log() : this.log(view, "join", () => [`encountered ${tries} consecutive reloads`])
+        if(tries > this.maxReloads){
+          this.log(view, "join", () => [`exceeded ${this.maxReloads} consecutive reloads. Entering failsafe mode`])
+        }
+        if(this.hasPendingLink()){
+          window.location = this.pendingLink
+        } else {
+          console.log("check 5: hard reload")
+          window.location.reload()
+        }
+      }, 2000)
+    }, afterMs - 2000)
   }
 
   getHookCallbacks(name){

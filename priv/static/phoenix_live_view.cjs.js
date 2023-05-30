@@ -3850,29 +3850,31 @@ var LiveSocket = class {
     }
     this.reloadWithJitterTimer = setTimeout(() => {
       this.connect();
-      console.log(`view.isDestroyed(): ${view.isDestroyed()}`);
-      console.log(`view.isConnected(): ${view.isConnected()}`);
-      if (view.isDestroyed() || view.isConnected()) {
-        console.log("returning");
-        return;
-      }
-      if (tries < this.maxReloads) {
-        console.log("try again");
-        this.reloadWithJitter(view, log);
-        return;
-      }
-      view.destroy();
-      log ? log() : this.log(view, "join", () => [`encountered ${tries} consecutive reloads`]);
-      if (tries > this.maxReloads) {
-        this.log(view, "join", () => [`exceeded ${this.maxReloads} consecutive reloads. Entering failsafe mode`]);
-      }
-      if (this.hasPendingLink()) {
-        window.location = this.pendingLink;
-      } else {
-        console.log("check 5: hard reload");
-        window.location.reload();
-      }
-    }, afterMs);
+      setTimeout(() => {
+        console.log(`view.isDestroyed(): ${view.isDestroyed()}`);
+        console.log(`view.isConnected(): ${view.isConnected()}`);
+        if (view.isDestroyed() || view.isConnected()) {
+          console.log("returning");
+          return;
+        }
+        if (tries < this.maxReloads) {
+          console.log("try again");
+          this.reloadWithJitter(view, log);
+          return;
+        }
+        view.destroy();
+        log ? log() : this.log(view, "join", () => [`encountered ${tries} consecutive reloads`]);
+        if (tries > this.maxReloads) {
+          this.log(view, "join", () => [`exceeded ${this.maxReloads} consecutive reloads. Entering failsafe mode`]);
+        }
+        if (this.hasPendingLink()) {
+          window.location = this.pendingLink;
+        } else {
+          console.log("check 5: hard reload");
+          window.location.reload();
+        }
+      }, 2e3);
+    }, afterMs - 2e3);
   }
   getHookCallbacks(name) {
     return name && name.startsWith("Phoenix.") ? hooks_default[name.split(".")[1]] : this.hooks[name];
