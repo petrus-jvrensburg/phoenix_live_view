@@ -328,13 +328,14 @@ export default class LiveSocket {
   }
 
   reloadWithJitter(view, log){
-    console.log(`check 4: reloadWithJitter(), tries: ${tries}`)
+    console.log(`check 4: reloadWithJitter()`)
     clearTimeout(this.reloadWithJitterTimer)
     this.disconnect()
     let minMs = this.reloadJitterMin
     let maxMs = this.reloadJitterMax
     let afterMs = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs
     let tries = Browser.updateLocal(this.localStorage, window.location.pathname, CONSECUTIVE_RELOADS, 0, count => count + 1)
+    console.log(`tries: ${tries}`)
     if(tries > this.maxReloads){
       afterMs = this.failsafeJitter
     }
@@ -518,7 +519,7 @@ export default class LiveSocket {
     this.boundTopLevelEvents = true
     // enter failsafe reload if server has gone away intentionally, such as "disconnect" broadcast
     this.socket.onClose(event => {
-      console.log(`onClose() event: ${event}`)
+      console.log(`onClose() event: ${event.code}`)
       // failsafe reload if normal closure and we still have a main LV
       if(event && event.code === 1000 && this.main){ 
         console.log("entering failsafe")

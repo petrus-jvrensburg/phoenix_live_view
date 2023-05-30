@@ -3837,13 +3837,14 @@ var LiveSocket = class {
     return fakePush;
   }
   reloadWithJitter(view, log) {
-    console.log(`check 4: reloadWithJitter(), tries: ${tries}`);
+    console.log(`check 4: reloadWithJitter()`);
     clearTimeout(this.reloadWithJitterTimer);
     this.disconnect();
     let minMs = this.reloadJitterMin;
     let maxMs = this.reloadJitterMax;
     let afterMs = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
     let tries = browser_default.updateLocal(this.localStorage, window.location.pathname, CONSECUTIVE_RELOADS, 0, (count) => count + 1);
+    console.log(`tries: ${tries}`);
     if (tries > this.maxReloads) {
       afterMs = this.failsafeJitter;
     }
@@ -4027,7 +4028,7 @@ var LiveSocket = class {
     }
     this.boundTopLevelEvents = true;
     this.socket.onClose((event) => {
-      console.log(`onClose() event: ${event}`);
+      console.log(`onClose() event: ${event.code}`);
       if (event && event.code === 1e3 && this.main) {
         console.log("entering failsafe");
         return this.reloadWithJitter(this.main);
